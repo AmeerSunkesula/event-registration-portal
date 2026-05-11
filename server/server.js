@@ -1,18 +1,31 @@
-import express from "express"
-import mongoose from "mongoose"
+// Load env vars first
 import dotenv from "dotenv"
-import cors from "cors"
-import authRoutes from "./routes/authRoutes.js" // <-- Import the routes
-
 dotenv.config()
 
+import express from "express"
+import cors from "cors"
+import path from "path"
+import { fileURLToPath } from "url"
+import connectDB from "./config/db.js"
+import authRoutes from "./routes/authRoutes.js"
+import eventRoutes from "./routes/eventRoutes.js"
+
 const app = express()
+
+// Resolve __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 app.use(cors())
 app.use(express.json())
 
-// Mount the authentication routes
+// Expose only sub-folders
+app.use("/uploads/events", express.static(path.join(__dirname, "uploads/events")))
+app.use("/uploads/profiles", express.static(path.join(__dirname, "uploads/profiles")))
+
+// Mount routes
 app.use("/api/auth", authRoutes)
+app.use("/api/events", eventRoutes)
 
 app.get("/", (req, res) => {
   res.send("Event Portal API is officially running! 🚀")
@@ -20,12 +33,7 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 5000
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ Connected to MongoDB")
-    app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
-  })
-  .catch((error) => {
-    console.log("⚠️ Database connection failed:", error.message)
-  })
+// Connect DB, then start server
+connectDB().then(() => {
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
+})

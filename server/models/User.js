@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["student", "organizer", "admin"],
+      enum: ["student", "admin"],
       default: "student",
     },
     // College specific fields (Required for students)
@@ -41,6 +41,16 @@ const userSchema = new mongoose.Schema(
         return this.role === "student"
       },
     },
+    profilePicture: {
+      type: String, // Stored filename
+    },
+    // Events created by user
+    organizedEvents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Event",
+      },
+    ],
   },
   { timestamps: true },
 )

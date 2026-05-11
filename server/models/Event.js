@@ -27,6 +27,11 @@ const eventSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    // Unique hybrid event code
+    eventCode: {
+      type: String,
+      unique: true,
+    },
     // Reference to the user (Organizer) who created the event
     organizer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -40,6 +45,9 @@ const eventSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    poster: {
+      type: String, // Stored filename
+    },
   },
   { timestamps: true },
 )

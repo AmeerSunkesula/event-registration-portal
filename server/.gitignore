@@ -1,2 +1,7 @@
+uploads/events/*
+uploads/profiles/*
+# But keep the folders themselves
+!uploads/events/.gitkeep
+!uploads/profiles/.gitkeep
 node_modules
 .env
