@@ -9,6 +9,7 @@ import { fileURLToPath } from "url"
 import connectDB from "./config/db.js"
 import authRoutes from "./routes/authRoutes.js"
 import eventRoutes from "./routes/eventRoutes.js"
+import userRoutes from "./routes/userRoutes.js"
 
 const app = express()
 
@@ -26,6 +27,7 @@ app.use("/uploads/profiles", express.static(path.join(__dirname, "uploads/profil
 // Mount routes
 app.use("/api/auth", authRoutes)
 app.use("/api/events", eventRoutes)
+app.use("/api/users", userRoutes)
 
 app.get("/", (req, res) => {
   res.send("Event Portal API is officially running! 🚀")
