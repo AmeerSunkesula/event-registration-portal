@@ -160,12 +160,30 @@ export function useProfileData() {
     }
   }
 
+  const changePassword = async (oldPassword, newPassword) => {
+    await axios.put(
+      "http://localhost:5000/api/users/change-password",
+      { oldPassword, newPassword },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+  }
+
+  const deleteAccount = async (password) => {
+    await axios.post(
+      "http://localhost:5000/api/users/delete-account",
+      { password },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+  }
+
   return {
     state,
     formik,
     fileInputRef,
     handleFileChange,
     removeProfileImg,
+    changePassword,
+    deleteAccount,
     user,
     handleCoordinatorReq,
     token,

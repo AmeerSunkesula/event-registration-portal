@@ -12,7 +12,7 @@ const PLACEHOLDER  = "https://ui-avatars.com/api/?background=303b57&color=fff&si
 const DEPARTMENTS  = ["Computer Engineering", "Mechanical", "Electrical", "Civil", "Other"]
 
 function Profile() {
-  const { state, formik, fileInputRef, handleFileChange, removeProfileImg, user, handleCoordinatorReq, token } = useProfileData()
+  const { state, formik, fileInputRef, handleFileChange, removeProfileImg, changePassword, deleteAccount, user, handleCoordinatorReq, token } = useProfileData()
   const { eventsLoading, userEvents, organizedEvents, eventsError, avatarLoading, avatarError } = state
 
   const dispatch = useDispatch()
@@ -35,11 +35,7 @@ function Profile() {
     onSubmit: async (values, { resetForm }) => {
       setPassMsg({ type: "", text: "" })
       try {
-        await axios.put(
-          "http://localhost:5000/api/users/change-password",
-          { oldPassword: values.oldPassword, newPassword: values.newPassword },
-          { headers: { Authorization: `Bearer ${token}` } }
-        )
+        await changePassword(values.oldPassword, values.newPassword)
         setPassMsg({ type: "success", text: "Password updated successfully!" })
         resetForm()
       } catch (err) {
@@ -53,11 +49,7 @@ function Profile() {
   const handleDeleteAccount = async () => {
     setDeleteError("")
     try {
-      await axios.post(
-        "http://localhost:5000/api/users/delete-account",
-        { password: deletePass },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      await deleteAccount(deletePass)
       // Cleanup UI
       document.querySelector('.modal-backdrop')?.remove()
       document.body.classList.remove('modal-open')

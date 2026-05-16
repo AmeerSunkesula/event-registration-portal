@@ -1,15 +1,11 @@
 import { useState } from "react"
 import { useFormik } from "formik"
-import axios from "axios"
-import { useDispatch } from "react-redux"
-import { useNavigate, Link } from "react-router-dom"
-import { loginSuccess } from "../features/auth/authSlice"
+import { Link } from "react-router-dom"
 import {
   registerInitialValues,
   validateRegister,
 } from "../utils/formValidators"
-
-const API = "http://localhost:5000/api/auth/register"
+import { useAuth } from "../hooks/useAuth"
 
 const DEPARTMENTS = [
   "Computer Engineering",
@@ -20,33 +16,13 @@ const DEPARTMENTS = [
 ]
 
 function Register() {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const [serverError, setServerError] = useState("")
+  const { serverError, registerUser } = useAuth()
 
   const formik = useFormik({
     initialValues: registerInitialValues,
     validate: validateRegister,
     onSubmit: async (values, { setSubmitting }) => {
-      setServerError("")
-      try {
-        const { data } = await axios.post(API, values)
-        
-        if (data.token) {
-          // Store auth in Redux
-          dispatch(loginSuccess({ user: data.user, token: data.token }))
-          navigate("/")
-        } else {
-          // Staff pending approval
-          alert(data.message)
-          navigate("/login")
-        }
-      } catch (err) {
-        // Show backend error message
-        setServerError(err.response?.data?.message || "Registration failed")
-      } finally {
-        setSubmitting(false)
-      }
+      await registerUser(values, setSubmitting)
     },
   })
 

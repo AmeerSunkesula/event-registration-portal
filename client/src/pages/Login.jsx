@@ -1,46 +1,23 @@
 import { useState } from "react"
 import { useFormik } from "formik"
-import axios from "axios"
-import { useDispatch } from "react-redux"
-import { useNavigate, Link } from "react-router-dom"
-import { loginSuccess } from "../features/auth/authSlice"
+import { Link } from "react-router-dom"
 import { loginInitialValues, validateLogin } from "../utils/formValidators"
-
-const API = "http://localhost:5000/api/auth/login"
+import { useAuth } from "../hooks/useAuth"
 
 function Login() {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const [serverError, setServerError] = useState("")
+  const { serverError, loginUser, requestPasswordReset } = useAuth()
   const [resetEmail, setResetEmail] = useState("")
   const [resetMsg, setResetMsg] = useState({ type: "", text: "" })
 
   const handlePasswordReset = async () => {
-    setResetMsg({ type: "", text: "" })
-    try {
-      await axios.post("http://localhost:5000/api/auth/request-reset", { email: resetEmail })
-      setResetMsg({ type: "success", text: "Reset requested successfully. An admin will review it." })
-    } catch (err) {
-      setResetMsg({ type: "danger", text: err.response?.data?.message || "Failed to request reset" })
-    }
+    await requestPasswordReset(resetEmail, setResetMsg)
   }
 
   const formik = useFormik({
     initialValues: loginInitialValues,
     validate: validateLogin,
     onSubmit: async (values, { setSubmitting }) => {
-      setServerError("")
-      try {
-        const { data } = await axios.post(API, values)
-        // Store auth in Redux
-        dispatch(loginSuccess({ user: data.user, token: data.token }))
-        navigate("/")
-      } catch (err) {
-        // Show backend error message
-        setServerError(err.response?.data?.message || "Login failed")
-      } finally {
-        setSubmitting(false)
-      }
+      await loginUser(values, setSubmitting)
     },
   })
 

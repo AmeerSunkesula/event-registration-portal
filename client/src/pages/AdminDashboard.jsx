@@ -1,81 +1,11 @@
-import { useState, useEffect } from "react"
-import { useSelector } from "react-redux"
+import { useState } from "react"
 import { Link } from "react-router-dom"
-import axios from "axios"
+import { useAdminDashboard } from "../hooks/useAdminDashboard"
 
 function AdminDashboard() {
-  const { token } = useSelector((s) => s.auth)
-  const [pendingStaff, setPendingStaff] = useState([])
-  const [events, setEvents] = useState([])
-  const [users, setUsers] = useState([])
-  const [resets, setResets] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { data, loading, error, approveStaff, revokeStaff, deleteUser, approveReset } = useAdminDashboard()
+  const { pendingStaff, events, users, passwordResets: resets } = data
   const [activeTab, setActiveTab] = useState("overview")
-
-  const headers = { Authorization: `Bearer ${token}` }
-
-  const fetchData = async () => {
-    setLoading(true)
-    try {
-      const [staffRes, eventsRes, usersRes, resetsRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/staff/pending", { headers }),
-        axios.get("http://localhost:5000/api/events", { headers }),
-        axios.get("http://localhost:5000/api/users", { headers }),
-        axios.get("http://localhost:5000/api/users/password-resets", { headers })
-      ])
-      setPendingStaff(staffRes.data)
-      setEvents(eventsRes.data)
-      setUsers(usersRes.data)
-      setResets(resetsRes.data)
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const approveStaff = async (staffId) => {
-    try {
-      await axios.put(`http://localhost:5000/api/staff/approve/${staffId}`, {}, { headers })
-      fetchData()
-    } catch (err) {
-      alert("Failed to approve staff")
-    }
-  }
-
-  const deleteUser = async (userId) => {
-    if (!window.confirm("Are you sure you want to permanently delete this user? Their events will be deleted as well.")) return
-    try {
-      await axios.delete(`http://localhost:5000/api/users/${userId}`, { headers })
-      fetchData()
-    } catch (err) {
-      alert("Failed to delete user")
-    }
-  }
-
-  const revokeStaff = async (staffId) => {
-    if (!window.confirm("Revoke this staff member's permissions?")) return
-    try {
-      await axios.put(`http://localhost:5000/api/staff/revoke/${staffId}`, {}, { headers })
-      fetchData()
-    } catch (err) {
-      alert("Failed to revoke staff")
-    }
-  }
-
-  const approveReset = async (userId) => {
-    if (!window.confirm("Approve reset? Password will become PortalReset123!")) return
-    try {
-      await axios.put(`http://localhost:5000/api/users/approve-reset/${userId}`, {}, { headers })
-      fetchData()
-    } catch (err) {
-      alert("Failed to approve reset")
-    }
-  }
 
   if (loading) {
     return (
@@ -87,6 +17,7 @@ function AdminDashboard() {
 
   return (
     <div className="container mt-5 mb-5">
+      {error && <div className="alert alert-danger">{error}</div>}
       <h2 className="mb-4 fw-bold" style={{ fontFamily: "var(--font-brand)", color: "var(--theme-navy)" }}>
         Admin Dashboard
       </h2>

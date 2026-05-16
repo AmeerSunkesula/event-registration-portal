@@ -45,3 +45,12 @@ h1, h2, h3, h4, h5, h6,
   border-color:     color-mix(in srgb, var(--theme-navy) 85%, #000);
   color: #fff;
 }
+
+/* ── Brand Logo Hover ────────────────────────────────── */
+.brand-logo {
+  transition: all 0.3s ease;
+}
+.brand-logo:hover {
+  color: #fff !important;
+  text-shadow: 0 0 8px rgba(222, 188, 88, 0.6);
+}

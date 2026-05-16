@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 const POSTER_PH = "https://placehold.co/600x200/303b57/debc58?text=Event"
 // Handle raw filename OR relative path stored in DB
@@ -10,6 +10,18 @@ const posterSrc = (poster) => poster
 
 // Smart register/unregister button
 function ActionButton({ ev, user, onRegister, onUnregister }) {
+  const navigate = useNavigate()
+  
+  if (!user) {
+    return (
+      <button className="btn w-100" 
+        style={{ backgroundColor: "var(--theme-navy)", color: "#fff", fontFamily: "var(--font-heading)" }}
+        onClick={() => navigate("/login")}>
+        Login to Register
+      </button>
+    )
+  }
+
   const isMain = ev.eventType === "main"
   const spotsLeft    = ev.capacity - (ev.registeredStudents?.length ?? 0)
   const isRegistered = ev.registeredStudents?.some(

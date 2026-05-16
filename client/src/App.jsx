@@ -13,6 +13,8 @@ import EventDetails from "./pages/EventDetails"
 import EventDashboard from "./pages/EventDashboard"
 import AdminDashboard from "./pages/AdminDashboard"
 import ProtectedRoute from "./components/ProtectedRoute"
+import Home from "./pages/Home"
+import PortalFooter from "./components/PortalFooter"
 
 function App() {
   const dispatch = useDispatch()
@@ -49,11 +51,15 @@ function App() {
   }
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <Navbar />
       <Routes>
+        <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/events" element={<EventsExplorer />} />
+        <Route path="/events/:id" element={<EventDetails />} />
+        
         <Route
           path="/profile"
           element={
@@ -63,26 +69,10 @@ function App() {
           }
         />
         <Route
-          path="/events"
-          element={
-            <ProtectedRoute>
-              <EventsExplorer />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/create-event"
           element={
             <ProtectedRoute>
               <CreateEvent />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/events/:id"
-          element={
-            <ProtectedRoute>
-              <EventDetails />
             </ProtectedRoute>
           }
         />
@@ -103,7 +93,8 @@ function App() {
           }
         />
       </Routes>
-    </>
+      <PortalFooter />
+    </div>
   )
 }
 

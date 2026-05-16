@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { useEventDetails } from "../hooks/useEventDetails"
 
 const POSTER_PH = "https://placehold.co/1200x400/303b57/debc58?text=Event"
@@ -11,6 +11,18 @@ const posterSrc = (poster) => poster
 
 // Sidebar action button — mirrors EventCard 7-day logic
 function SidebarButton({ event, user, onRegister, onUnregister }) {
+  const navigate = useNavigate()
+  
+  if (!user) {
+    return (
+      <button className="btn w-100"
+        style={{ backgroundColor: "var(--theme-navy)", color: "#fff", fontFamily: "var(--font-heading)" }}
+        onClick={() => navigate("/login")}>
+        Login to Register
+      </button>
+    )
+  }
+
   const isMain = event.eventType === "main"
   const spotsLeft    = event.capacity - (event.registeredStudents?.length ?? 0)
   const isRegistered = event.registeredStudents?.some(

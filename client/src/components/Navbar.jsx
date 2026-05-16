@@ -19,7 +19,7 @@ function Navbar() {
       <div className="container">
         {/* Brand */}
         <Link
-          className="navbar-brand fw-bold"
+          className="navbar-brand fw-bold brand-logo"
           style={{
             fontFamily: "var(--font-brand)",
             color: "var(--theme-mustard)",
