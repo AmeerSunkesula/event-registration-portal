@@ -146,11 +146,26 @@ export function useProfileData() {
     }
   }
 
+  const removeProfileImg = async () => {
+    try {
+      dispatch({ type: "AVATAR_START" })
+      await axios.delete(
+        "http://localhost:5000/api/users/profile-picture",
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      reduxDispatch(updateUser({ profilePicture: null }))
+      dispatch({ type: "AVATAR_SUCCESS" })
+    } catch (err) {
+      dispatch({ type: "AVATAR_ERROR", payload: err.response?.data?.message || "Failed to remove avatar" })
+    }
+  }
+
   return {
     state,
     formik,
     fileInputRef,
     handleFileChange,
+    removeProfileImg,
     user,
     handleCoordinatorReq,
     token,

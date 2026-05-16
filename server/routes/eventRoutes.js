@@ -12,7 +12,8 @@ import {
   getEventDashboardData,
   updateEvent,
   deleteEvent,
-  removeUserFromEvent
+  removeUserFromEvent,
+  removeEventPoster
 } from "../controllers/eventController.js"
 
 const router = express.Router()
@@ -27,9 +28,10 @@ router.post("/unregister/:id",  protect, unregisterFromEvent)
 router.get("/:id/dashboard-data", protect, getEventDashboardData)
 
 // Dynamic param — last to avoid collisions
-router.put("/:id",              protect, updateEvent)
+router.put("/:id",              protect, upload.single("poster"), updateEvent)
 router.get("/:id",              protect, getEventById)
 router.delete("/:id",           protect, deleteEvent)
 router.delete("/:id/users/:userId", protect, adminOnly, removeUserFromEvent)
+router.delete("/:id/poster",    protect, removeEventPoster)
 
 export default router

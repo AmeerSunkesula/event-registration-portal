@@ -8,7 +8,7 @@ function EventDashboard() {
   const { 
     event, approvedStaff, loading, error, user,
     sendCoordinatorRequest, updateEvent, 
-    deleteEvent, removeAttendee, removeCoordinator 
+    deleteEvent, removeAttendee, removeCoordinator, removePosterImg 
   } = useEventDashboard(id)
   
   const [activeTab, setActiveTab] = useState("attendees")
@@ -16,6 +16,7 @@ function EventDashboard() {
 
   // Form states for simple edit
   const [editData, setEditData] = useState(null)
+  const [file, setFile] = useState(null)
 
   if (loading) {
     return (
@@ -36,7 +37,16 @@ function EventDashboard() {
 
   const handleEditSubmit = (e) => {
     e.preventDefault()
-    if (editData) updateEvent(editData)
+    if (editData) {
+      const formData = new FormData()
+      Object.keys(editData).forEach(key => {
+        formData.append(key, editData[key])
+      })
+      if (file) {
+        formData.append("poster", file)
+      }
+      updateEvent(formData)
+    }
   }
 
   return (
@@ -199,7 +209,31 @@ function EventDashboard() {
         {activeTab === "edit" && editData && (
           <div>
             <h5 className="mb-3 fw-bold">Edit Event Details</h5>
+
+            <div className="card p-3 bg-light border-0 mb-4 d-flex flex-row align-items-start gap-3">
+              <img 
+                src={event.poster ? (event.poster.includes("/") ? `http://localhost:5000/${event.poster}` : `http://localhost:5000/uploads/events/${event.poster}`) : "https://placehold.co/600x200/303b57/debc58?text=Event"} 
+                alt="Event Poster" 
+                style={{ width: "150px", height: "auto", objectFit: "cover", borderRadius: "8px" }} 
+              />
+              <div className="flex-grow-1">
+                <h6 className="fw-semibold">Event Poster</h6>
+                <p className="text-muted small mb-2">Upload a high-quality image for the event.</p>
+                {event.poster && (
+                  <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => {
+                    if(window.confirm("Remove this poster?")) removePosterImg()
+                  }}>
+                    Remove Poster
+                  </button>
+                )}
+              </div>
+            </div>
+
             <form onSubmit={handleEditSubmit}>
+              <div className="mb-3">
+                <label className="form-label">New Poster</label>
+                <input type="file" className="form-control" name="poster" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
+              </div>
               <div className="mb-3">
                 <label className="form-label">Title</label>
                 <input type="text" className="form-control" value={editData.title} 

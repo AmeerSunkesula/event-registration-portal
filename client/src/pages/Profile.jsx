@@ -12,7 +12,7 @@ const PLACEHOLDER  = "https://ui-avatars.com/api/?background=303b57&color=fff&si
 const DEPARTMENTS  = ["Computer Engineering", "Mechanical", "Electrical", "Civil", "Other"]
 
 function Profile() {
-  const { state, formik, fileInputRef, handleFileChange, user, handleCoordinatorReq, token } = useProfileData()
+  const { state, formik, fileInputRef, handleFileChange, removeProfileImg, user, handleCoordinatorReq, token } = useProfileData()
   const { eventsLoading, userEvents, organizedEvents, eventsError, avatarLoading, avatarError } = state
 
   const dispatch = useDispatch()
@@ -117,17 +117,27 @@ function Profile() {
             />
 
             {/* Upload trigger */}
-            <button
-              className="btn btn-outline-primary mt-3 w-100"
-              disabled={avatarLoading}
-              onClick={() => fileInputRef.current?.click()}>
-              {avatarLoading ? (
-                <>
-                  <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
-                  Uploading…
-                </>
-              ) : "Change Photo"}
-            </button>
+            <div className="d-flex gap-2 mt-3 w-100">
+              <button
+                className="btn btn-outline-primary flex-grow-1"
+                disabled={avatarLoading}
+                onClick={() => fileInputRef.current?.click()}>
+                {avatarLoading ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" aria-hidden="true" />
+                    Uploading…
+                  </>
+                ) : "Change"}
+              </button>
+              {user?.profilePicture && (
+                <button
+                  className="btn btn-outline-danger"
+                  disabled={avatarLoading}
+                  onClick={removeProfileImg}>
+                  Remove
+                </button>
+              )}
+            </div>
 
           </div>
         </div>

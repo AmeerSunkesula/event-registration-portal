@@ -88,9 +88,18 @@ export function useEventDashboard(eventId) {
     }
   }
 
+  const removePosterImg = async () => {
+    try {
+      const { data } = await axios.delete(`${API_EVENTS}/${eventId}/poster`, { headers })
+      setEvent(data)
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to remove poster")
+    }
+  }
+
   return { 
     event, approvedStaff, loading, error, user,
     sendCoordinatorRequest, updateEvent, 
-    deleteEvent, removeAttendee, removeCoordinator 
+    deleteEvent, removeAttendee, removeCoordinator, removePosterImg
   }
 }

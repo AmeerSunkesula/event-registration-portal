@@ -47,9 +47,15 @@ export const updateEvent = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to update this event" })
     }
 
+    const updateData = { ...req.body }
+
+    if (req.file) {
+      updateData.poster = req.file.path.replace(/\\/g, "/")
+    }
+
     const updatedEvent = await Event.findByIdAndUpdate(
       req.params.id,
-      { $set: req.body },
+      { $set: updateData },
       { new: true }
     )
 
@@ -237,6 +243,24 @@ export const removeUserFromEvent = async (req, res) => {
     ])
 
     res.status(200).json({ message: "User removed from event" })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// Remove Event Poster
+export const removeEventPoster = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+    if (!event) return res.status(404).json({ message: "Event not found" })
+
+    if (String(event.organizer) !== String(req.user.id) && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Not authorized to modify this event" })
+    }
+
+    event.poster = null
+    await event.save()
+    res.status(200).json(event)
   } catch (err) {
     res.status(500).json({ message: err.message })
   }

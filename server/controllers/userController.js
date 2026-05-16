@@ -39,6 +39,20 @@ export const uploadProfilePicture = async (req, res) => {
   }
 }
 
+export const removeProfilePicture = async (req, res) => {
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { profilePicture: null },
+      { new: true }
+    ).select("-password")
+
+    res.status(200).json({ user: updatedUser })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
 // Update profile fields
 export const updateProfile = async (req, res) => {
   try {
