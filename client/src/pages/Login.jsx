@@ -4,34 +4,30 @@ import axios from "axios"
 import { useDispatch } from "react-redux"
 import { useNavigate, Link } from "react-router-dom"
 import { loginSuccess } from "../features/auth/authSlice"
+import { loginInitialValues, validateLogin } from "../utils/formValidators"
 
 const API = "http://localhost:5000/api/auth/login"
-
-// Basic email regex
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 function Login() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [serverError, setServerError] = useState("")
+  const [resetEmail, setResetEmail] = useState("")
+  const [resetMsg, setResetMsg] = useState({ type: "", text: "" })
 
-  // Inline validate — no Yup
-  const validate = (values) => {
-    const errors = {}
-    if (!values.email) {
-      errors.email = "Email is required"
-    } else if (!EMAIL_RE.test(values.email)) {
-      errors.email = "Enter a valid email"
+  const handlePasswordReset = async () => {
+    setResetMsg({ type: "", text: "" })
+    try {
+      await axios.post("http://localhost:5000/api/auth/request-reset", { email: resetEmail })
+      setResetMsg({ type: "success", text: "Reset requested successfully. An admin will review it." })
+    } catch (err) {
+      setResetMsg({ type: "danger", text: err.response?.data?.message || "Failed to request reset" })
     }
-    if (!values.password) {
-      errors.password = "Password is required"
-    }
-    return errors
   }
 
   const formik = useFormik({
-    initialValues: { email: "", password: "" },
-    validate,
+    initialValues: loginInitialValues,
+    validate: validateLogin,
     onSubmit: async (values, { setSubmitting }) => {
       setServerError("")
       try {
@@ -49,15 +45,15 @@ function Login() {
   })
 
   // Helper — touched + error on field
-  const isInvalid = (field) =>
-    formik.touched[field] && formik.errors[field]
+  const isInvalid = (field) => formik.touched[field] && formik.errors[field]
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
       <div
-        className="card shadow-sm border-0"
+        className="card auth-card shadow-sm border-0"
         style={{ width: "100%", maxWidth: 420 }}>
         <div className="card-body p-4 p-md-5">
+          <h2 className="portal-brand">Event Registration Portal</h2>
           <h1 className="h4 fw-bold text-center mb-1">Welcome back</h1>
           <p className="text-muted text-center mb-4 small">
             Sign in to your portal account
@@ -112,11 +108,21 @@ function Login() {
               )}
             </div>
 
+            <div className="d-flex justify-content-end mb-4">
+              <button 
+                type="button" 
+                className="btn btn-link p-0 text-decoration-none small" 
+                data-bs-toggle="modal" 
+                data-bs-target="#forgotPasswordModal">
+                Forgot Password?
+              </button>
+            </div>
+
             <button
               type="submit"
               className="btn btn-primary w-100 fw-semibold"
               disabled={formik.isSubmitting}>
-              {formik.isSubmitting ? (
+              {formik.isSubmitting ?
                 <>
                   <span
                     className="spinner-border spinner-border-sm me-2"
@@ -124,7 +130,7 @@ function Login() {
                   />
                   Signing in…
                 </>
-              ) : "Sign in"}
+              : "Sign in"}
             </button>
           </form>
 
@@ -136,6 +142,38 @@ function Login() {
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <div className="modal fade" id="forgotPasswordModal" tabIndex="-1" aria-hidden="true">
+        <div className="modal-dialog">
+          <div className="modal-content auth-card">
+            <div className="modal-header border-0 pb-0">
+              <h5 className="modal-title fw-bold">Request Password Reset</h5>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div className="modal-body pt-2">
+              <p className="mb-3 small text-muted">Enter your account email. An admin will process the request and reset your password to the system default.</p>
+              <input
+                type="email"
+                className="form-control"
+                placeholder="you@example.com"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+              />
+              {resetMsg.text && (
+                <div className={`alert alert-${resetMsg.type} py-1 mt-2 mb-0 small`}>{resetMsg.text}</div>
+              )}
+            </div>
+            <div className="modal-footer border-0 pt-0">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              <button type="button" className="btn btn-primary" onClick={handlePasswordReset} disabled={!resetEmail}>
+                Send Request
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   )
 }

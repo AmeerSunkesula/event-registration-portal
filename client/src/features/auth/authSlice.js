@@ -1,29 +1,43 @@
 import { createSlice } from "@reduxjs/toolkit"
 
+// Only persist token — user fetched fresh via /me on load
+const storedToken = localStorage.getItem("token")
+
 const initialState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
+  user:            null,
+  token:           storedToken || null,
+  isAuthenticated: !!storedToken,
 }
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // Call this when your backend sends back a successful login
+    // Persist token only on login / register
     loginSuccess: (state, action) => {
-      state.user = action.payload.user
-      state.token = action.payload.token
+      state.user            = action.payload.user
+      state.token           = action.payload.token
+      state.isAuthenticated = true
+      localStorage.setItem("token", action.payload.token)
+    },
+    // Hydrate user from /me response
+    setUser: (state, action) => {
+      state.user            = action.payload
       state.isAuthenticated = true
     },
-    // Call this when the user clicks "Logout"
+    // Patch specific user fields
+    updateUser: (state, action) => {
+      state.user = { ...state.user, ...action.payload }
+    },
+    // Clear everything on logout
     logout: (state) => {
-      state.user = null
-      state.token = null
+      state.user            = null
+      state.token           = null
       state.isAuthenticated = false
+      localStorage.removeItem("token")
     },
   },
 })
 
-export const { loginSuccess, logout } = authSlice.actions
+export const { loginSuccess, setUser, updateUser, logout } = authSlice.actions
 export default authSlice.reducer
