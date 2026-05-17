@@ -14,6 +14,10 @@ function EventDashboard() {
   const [activeTab, setActiveTab] = useState("attendees")
   const [selectedStaff, setSelectedStaff] = useState("")
 
+  // Staff can only see attendees + edit tabs
+  const isStaffOnly = user?.role === "staff" &&
+    String(user?._id) !== String(event?.organizer?._id)
+
   // Form states for simple edit
   const [editData, setEditData] = useState(null)
   const [file, setFile] = useState(null)
@@ -89,12 +93,15 @@ function EventDashboard() {
             ⚙️ Edit Event
           </button>
         </li>
-        <li className="nav-item ms-auto">
-          <button className={`nav-link ${activeTab === "danger" ? "active bg-danger text-white" : "text-danger fw-bold"}`}
-            onClick={() => setActiveTab("danger")}>
-            ⚠️ Settings/Danger
-          </button>
-        </li>
+        {/* Danger tab — hidden for staff */}
+        {!isStaffOnly && (
+          <li className="nav-item ms-auto">
+            <button className={`nav-link ${activeTab === "danger" ? "active bg-danger text-white" : "text-danger fw-bold"}`}
+              onClick={() => setActiveTab("danger")}>
+              ⚠️ Settings/Danger
+            </button>
+          </li>
+        )}
       </ul>
 
       {/* Tab Content */}

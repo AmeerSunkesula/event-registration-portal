@@ -13,17 +13,17 @@ export function useEventsData() {
   const [searchQuery, setSearch]        = useState("")
   const [selectedCategory, setCategory] = useState("All")
 
-  // Fetch all events
+  // Public fetch
   const fetchEvents = useCallback(() => {
     setLoading(true)
     axios
-      .get(API, { headers: { Authorization: `Bearer ${token}` } })
+      .get(API)
       .then(({ data }) => { setRaw(data); setLoading(false) })
       .catch((err) => {
         setError(err.response?.data?.message || "Failed to load")
         setLoading(false)
       })
-  }, [token])
+  }, [])
 
   useEffect(() => { fetchEvents() }, [fetchEvents])
 
@@ -65,10 +65,11 @@ export function useEventsData() {
     return matchSearch && matchCat
   })
 
-  // Standalone events
+  // All visible events (excludes raw sub-events)
+  const allEvents        = filtered.filter((e) => e.eventType !== "sub")
   const standaloneEvents = filtered.filter((e) => e.eventType === "standalone")
 
-  // Main events with nested children (children from raw — not filtered)
+  // Main events with nested children
   const mainEvents = filtered
     .filter((e) => e.eventType === "main")
     .map((main) => ({
@@ -81,7 +82,7 @@ export function useEventsData() {
 
   return {
     loading, error,
-    standaloneEvents, mainEvents,
+    allEvents, standaloneEvents, mainEvents,
     searchQuery, setSearch,
     selectedCategory, setCategory,
     categories: CATEGORIES,

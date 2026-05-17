@@ -10,7 +10,8 @@ const eventSchema = new mongoose.Schema(
       enum: ["Technical", "Cultural", "Sports", "Workshop", "Seminar", "Tech Fest", "Other"],
       required: true,
     },
-    date:     { type: Date,   required: true },
+    date:    { type: Date, required: true },
+    endDate: { type: Date },
     venue:    { type: String, required: true },
     capacity: { type: Number, required: true },
     // Hierarchy fields

@@ -14,6 +14,7 @@ const schema = Yup.object({
   description: Yup.string().trim().required("Description is required"),
   category:    Yup.string().required("Category is required"),
   date:        Yup.date().required("Date is required").min(new Date(), "Date must be in the future"),
+  endDate:     Yup.date().notRequired(),
   venue:       Yup.string().trim().required("Venue is required"),
   capacity:    Yup.number().required("Capacity is required").min(1, "Min 1 seat"),
   rules:       Yup.string().trim(),
@@ -34,16 +35,16 @@ export function useCreateEvent() {
   // Fetch main events for parent dropdown
   useEffect(() => {
     axios
-      .get(API, { headers: { Authorization: `Bearer ${token}` } })
+      .get(API)
       .then(({ data }) => setMainEvents(data.filter((e) => e.eventType === "main")))
       .catch(() => {})
-  }, [token])
+  }, [])
 
   const formik = useFormik({
     initialValues: {
       title: "", description: "", category: "", date: "",
-      venue: "", capacity: "", eventType: "standalone", parentEvent: "",
-      rules: "", poster: null,
+      endDate: "", venue: "", capacity: "", eventType: "standalone",
+      parentEvent: "", rules: "", poster: null,
     },
     validationSchema: schema,
     onSubmit: async (values, { setSubmitting }) => {
@@ -65,7 +66,12 @@ export function useCreateEvent() {
     },
   })
 
+  // Derive selected parent for date constraints
+  const selectedParent = mainEvents.find(
+    (e) => e._id === formik.values.parentEvent
+  ) || null
+
   const isInvalid = (f) => formik.touched[f] && formik.errors[f]
 
-  return { formik, mainEvents, serverError, isInvalid, CATEGORIES, EVENT_TYPES }
+  return { formik, mainEvents, selectedParent, serverError, isInvalid, CATEGORIES, EVENT_TYPES }
 }

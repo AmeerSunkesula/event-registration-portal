@@ -1,3 +1,5 @@
+import fs from "fs"
+import path from "path"
 import Event from "../models/Event.js"
 import User from "../models/User.js"
 import mongoose from "mongoose"
@@ -7,25 +9,57 @@ export const createEvent = async (req, res) => {
   try {
     if (!req.user) return res.status(401).json({ message: "Not authorized" })
 
-    const { title, description, category, date, venue, capacity,
-            eventType, parentEvent } = req.body
+    const { title, description, rules, category, date, venue, capacity,
+            eventType, parentEvent, endDate } = req.body
+
+    const type = eventType || "standalone"
+
+    // Parent-child validation for sub-events
+    if (type === "sub") {
+      if (!parentEvent) return res.status(400).json({ message: "Parent event required for sub-events" })
+      const parent = await Event.findById(parentEvent)
+      if (!parent) return res.status(400).json({ message: "Parent event not found" })
+
+      const subDate    = new Date(date)
+      const parentDate = new Date(parent.date)
+
+      // Sub must start on/after parent
+      if (subDate < parentDate) {
+        return res.status(400).json({ message: "Sub-event must start on or after parent event start date" })
+      }
+      // Sub must end before/on parent endDate (if set)
+      if (parent.endDate && subDate > new Date(parent.endDate)) {
+        return res.status(400).json({ message: "Sub-events must be scheduled within the active dates of the parent festival." })
+      }
+      // Force date within parent window; strip endDate
+      delete req.body.endDate
+    }
+
+    // End date validation for main/standalone
+    if ((type === "main" || type === "standalone") && endDate) {
+      if (new Date(endDate) < new Date(date)) {
+        return res.status(400).json({ message: "End date must be on or after start date" })
+      }
+    }
 
     const newId     = new mongoose.Types.ObjectId()
     const eventCode = `${newId.toString().slice(0, 8)}-${req.user.rollNumber}`
 
     const event = new Event({
       _id: newId,
-      title, description, category, date, venue, capacity,
-      eventType:   eventType   || "standalone",
+      title, description, rules, category,
+      date, venue, capacity,
+      eventType: type,
       parentEvent: parentEvent || null,
       organizer:   req.user.id,
       eventCode,
       poster: req.file ? req.file.path.replace(/\\/g, "/") : null,
+      ...(type !== "sub" && endDate ? { endDate } : {}),
     })
 
     const savedEvent = await event.save()
 
-    // Two-way link for organizer
+    // Two-way organizer link
     await User.findByIdAndUpdate(req.user.id, {
       $push: { organizedEvents: event._id },
     })
@@ -48,6 +82,18 @@ export const updateEvent = async (req, res) => {
     }
 
     const updateData = { ...req.body }
+
+    // End date validation on update
+    const effectiveDate    = updateData.date    || event.date
+    const effectiveEndDate = updateData.endDate || event.endDate
+    if (effectiveEndDate && event.eventType !== "sub") {
+      if (new Date(effectiveEndDate) < new Date(effectiveDate)) {
+        return res.status(400).json({ message: "End date must be on or after start date" })
+      }
+    }
+
+    // Strip endDate from sub-events
+    if (event.eventType === "sub") delete updateData.endDate
 
     if (req.file) {
       updateData.poster = req.file.path.replace(/\\/g, "/")
@@ -97,7 +143,7 @@ export const getEventById = async (req, res) => {
   }
 }
 
-// Get populated event data for dashboard (Organizer / Admin)
+// Dashboard data — Organizer / Admin / Coordinator
 export const getEventDashboardData = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
@@ -107,8 +153,13 @@ export const getEventDashboardData = async (req, res) => {
 
     if (!event) return res.status(404).json({ message: "Event not found" })
 
-    // Check authorization
-    if (req.user.role !== "admin" && String(req.user._id) !== String(event.organizer._id)) {
+    const isOrganizer   = String(req.user._id) === String(event.organizer._id)
+    const isAdmin       = req.user.role === "admin"
+    const isCoordinator = event.coordinators.some(
+      (c) => String(c._id) === String(req.user._id)
+    )
+
+    if (!isAdmin && !isOrganizer && !isCoordinator) {
       return res.status(403).json({ message: "Not authorized to manage this event" })
     }
 
@@ -118,7 +169,7 @@ export const getEventDashboardData = async (req, res) => {
   }
 }
 
-// Get events current user registered for
+// Events current user registered for
 export const getMyEvents = async (req, res) => {
   try {
     const events = await Event.find({ registeredStudents: req.user.id })
@@ -130,7 +181,7 @@ export const getMyEvents = async (req, res) => {
   }
 }
 
-// Get events current user is organizing
+// Events current user is organizing
 export const getOrganizedEvents = async (req, res) => {
   try {
     const events = await Event.find({ organizer: req.user.id })
@@ -142,7 +193,7 @@ export const getOrganizedEvents = async (req, res) => {
   }
 }
 
-// Register student for an event
+// Register student for event
 export const registerForEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
@@ -199,7 +250,7 @@ export const unregisterFromEvent = async (req, res) => {
   }
 }
 
-// Delete Event
+// Delete event
 export const deleteEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
@@ -210,7 +261,7 @@ export const deleteEvent = async (req, res) => {
       return res.status(403).json({ message: "Not authorized to delete this event" })
     }
 
-    // Cascade pull event ID from ALL users
+    // Cascade pull event ID from all users
     await User.updateMany(
       {},
       {
@@ -230,7 +281,7 @@ export const deleteEvent = async (req, res) => {
   }
 }
 
-// Remove User From Event (Admin only)
+// Remove user from event (Admin only)
 export const removeUserFromEvent = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
@@ -248,7 +299,7 @@ export const removeUserFromEvent = async (req, res) => {
   }
 }
 
-// Remove Event Poster
+// Remove event poster + GC filesystem
 export const removeEventPoster = async (req, res) => {
   try {
     const event = await Event.findById(req.params.id)
@@ -256,6 +307,14 @@ export const removeEventPoster = async (req, res) => {
 
     if (String(event.organizer) !== String(req.user.id) && req.user.role !== "admin") {
       return res.status(403).json({ message: "Not authorized to modify this event" })
+    }
+
+    // GC: delete file from disk
+    if (event.poster) {
+      try {
+        const filePath = path.join(process.cwd(), event.poster)
+        fs.unlinkSync(filePath)
+      } catch (_) { /* file already gone */ }
     }
 
     event.poster = null

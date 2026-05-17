@@ -1,3 +1,5 @@
+import fs from "fs"
+import path from "path"
 import User from "../models/User.js"
 import Event from "../models/Event.js"
 import bcrypt from "bcryptjs"
@@ -41,6 +43,15 @@ export const uploadProfilePicture = async (req, res) => {
 
 export const removeProfilePicture = async (req, res) => {
   try {
+    const user = await User.findById(req.user.id)
+    // GC: delete file from disk
+    if (user?.profilePicture) {
+      try {
+        const filePath = path.join(process.cwd(), user.profilePicture)
+        fs.unlinkSync(filePath)
+      } catch (_) { /* file already missing */ }
+    }
+
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
       { profilePicture: null },

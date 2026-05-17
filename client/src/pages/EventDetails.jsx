@@ -1,18 +1,34 @@
+import { useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useEventDetails } from "../hooks/useEventDetails"
 
 const POSTER_PH = "https://placehold.co/1200x400/303b57/debc58?text=Event"
-// Handle raw filename OR relative path stored in DB
+
+// Resolve poster URL
 const posterSrc = (poster) => poster
   ? (poster.includes("/")
       ? `http://localhost:5000/${poster}`
       : `http://localhost:5000/uploads/events/${poster}`)
   : POSTER_PH
 
-// Sidebar action button — mirrors EventCard 7-day logic
+// Format date helper
+const fmt = (d) => new Date(d).toLocaleDateString("en-IN", {
+  weekday: "long", day: "numeric", month: "long", year: "numeric",
+})
+
+// Sidebar action button
 function SidebarButton({ event, user, onRegister, onUnregister }) {
   const navigate = useNavigate()
-  
+
+  // Hidden for main events
+  if (event.eventType === "main") {
+    return (
+      <p className="text-muted small mb-0 text-center fst-italic">
+        Scroll down to view sub-events.
+      </p>
+    )
+  }
+
   if (!user) {
     return (
       <button className="btn w-100"
@@ -23,7 +39,7 @@ function SidebarButton({ event, user, onRegister, onUnregister }) {
     )
   }
 
-  const isMain = event.eventType === "main"
+  const isMain       = event.eventType === "main"
   const spotsLeft    = event.capacity - (event.registeredStudents?.length ?? 0)
   const isRegistered = event.registeredStudents?.some(
     (id) => String(id) === String(user?._id)
@@ -42,8 +58,7 @@ function SidebarButton({ event, user, onRegister, onUnregister }) {
     }
     return (
       <button className="btn w-100"
-        style={{ backgroundColor: "var(--theme-rust)", color: "#fff",
-                 fontFamily: "var(--font-heading)" }}
+        style={{ backgroundColor: "var(--theme-rust)", color: "#fff", fontFamily: "var(--font-heading)" }}
         onClick={onUnregister}>
         Unsubscribe
       </button>
@@ -74,6 +89,9 @@ function EventDetails() {
   const { event, loading, error, registerForEvent, unregisterForEvent, user } =
     useEventDetails(id)
 
+  // Sub-event local search
+  const [subSearch, setSubSearch] = useState("")
+
   if (loading) {
     return (
       <div className="min-vh-100 d-flex align-items-center justify-content-center">
@@ -93,8 +111,13 @@ function EventDetails() {
     )
   }
 
-  const isMain = event.eventType === "main"
+  const isMain    = event.eventType === "main"
   const spotsLeft = event.capacity - (event.registeredStudents?.length ?? 0)
+
+  // Filtered sub-events
+  const filteredChildren = (event.children || []).filter((c) =>
+    c.title.toLowerCase().includes(subSearch.toLowerCase())
+  )
 
   return (
     <div className="container mt-5 mb-5">
@@ -127,7 +150,7 @@ function EventDetails() {
             {event.eventType !== "standalone" && (
               <span className="badge"
                 style={{ backgroundColor: "var(--theme-navy)", fontSize: "0.75rem" }}>
-                {event.eventType === "main" ? "Main Event" : "Sub-Event"}
+                {event.eventType === "main" ? "🎪 Festival" : "Sub-Event"}
               </span>
             )}
           </div>
@@ -160,30 +183,50 @@ function EventDetails() {
             </>
           )}
 
-          {/* Sub-events (for main events) */}
-          {event.eventType === "main" && event.children?.length > 0 && (
+          {/* Sub-events with local search */}
+          {isMain && (
             <>
               <hr />
               <h6 className="fw-semibold mb-3"
                 style={{ fontFamily: "var(--font-heading)", color: "var(--theme-navy)" }}>
-                Sub-Events ({event.children.length})
+                Sub-Events ({event.children?.length || 0})
               </h6>
-              <ul className="list-group list-group-flush">
-                {event.children.map((child) => (
-                  <li key={child._id} className="list-group-item px-0 d-flex justify-content-between align-items-center">
-                    <div>
-                      <p className="mb-0 fw-semibold" style={{ fontFamily: "var(--font-heading)" }}>
-                        {child.title}
-                      </p>
-                      <small className="text-muted">{child.venue}</small>
-                    </div>
-                    <Link to={`/events/${child._id}`}
-                      className="btn btn-sm btn-outline-secondary">
-                      View
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+
+              {/* Local search bar */}
+              {event.children?.length > 0 && (
+                <input
+                  type="search"
+                  className="form-control mb-3"
+                  placeholder="Search sub-events…"
+                  value={subSearch}
+                  onChange={(e) => setSubSearch(e.target.value)}
+                />
+              )}
+
+              {filteredChildren.length > 0 ? (
+                <ul className="list-group list-group-flush">
+                  {filteredChildren.map((child) => (
+                    <li key={child._id} className="list-group-item px-0 d-flex justify-content-between align-items-center">
+                      <div>
+                        <p className="mb-0 fw-semibold" style={{ fontFamily: "var(--font-heading)" }}>
+                          {child.title}
+                        </p>
+                        <small className="text-muted">
+                          {child.venue} · {new Date(child.date).toLocaleDateString("en-IN", {
+                            day: "numeric", month: "short",
+                          })}
+                        </small>
+                      </div>
+                      <Link to={`/events/${child._id}`}
+                        className="btn btn-sm btn-outline-secondary">
+                        View
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-muted small">No sub-events match your search.</p>
+              )}
             </>
           )}
         </div>
@@ -192,7 +235,7 @@ function EventDetails() {
         <div className="col-md-4">
           <div className="card auth-card sticky-top p-4" style={{ top: "80px" }}>
 
-            {/* Spots badge */}
+            {/* Spots badge — hidden for main */}
             {!isMain && (
               <span className="badge mb-3"
                 style={{
@@ -203,13 +246,13 @@ function EventDetails() {
               </span>
             )}
 
-            {/* Date */}
+            {/* Date — smart range */}
             <p className="mb-2">
               <span className="fw-semibold" style={{ fontFamily: "var(--font-heading)" }}>📅 Date</span><br />
               <span className="text-muted">
-                {new Date(event.date).toLocaleDateString("en-IN", {
-                  weekday: "long", day: "numeric", month: "long", year: "numeric",
-                })}
+                {event.endDate
+                  ? `${fmt(event.date)} – ${fmt(event.endDate)}`
+                  : fmt(event.date)}
               </span>
             </p>
 
@@ -241,8 +284,8 @@ function EventDetails() {
             {/* Action button */}
             <SidebarButton
               event={event} user={user}
-              onRegister={registerForEvent}
-              onUnregister={unregisterForEvent}
+              onRegister={() => registerForEvent(event._id)}
+              onUnregister={() => unregisterForEvent(event._id)}
             />
           </div>
         </div>

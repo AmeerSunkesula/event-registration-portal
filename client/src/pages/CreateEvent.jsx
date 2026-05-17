@@ -1,8 +1,15 @@
 import { useCreateEvent } from "../hooks/useCreateEvent"
 
 function CreateEvent() {
-  const { formik, mainEvents, serverError, isInvalid, CATEGORIES, EVENT_TYPES } =
+  const { formik, mainEvents, selectedParent, serverError, isInvalid, CATEGORIES, EVENT_TYPES } =
     useCreateEvent()
+
+  const isSub      = formik.values.eventType === "sub"
+  const isMultiDay = formik.values.eventType === "main" || formik.values.eventType === "standalone"
+
+  // Calendar min/max for sub-events
+  const dateMin = isSub && selectedParent ? selectedParent.date?.slice(0, 10) : undefined
+  const dateMax = isSub && selectedParent?.endDate ? selectedParent.endDate.slice(0, 10) : undefined
 
   return (
     <div className="container mt-5 mb-5" style={{ maxWidth: 680 }}>
@@ -61,8 +68,8 @@ function CreateEvent() {
               {isInvalid("eventType") && <div className="invalid-feedback">{formik.errors.eventType}</div>}
             </div>
 
-            {/* Parent event — shown only for sub-events */}
-            {formik.values.eventType === "sub" && (
+            {/* Parent event — sub-events only */}
+            {isSub && (
               <div className="col-12">
                 <label htmlFor="ce-parent" className="form-label">Parent event</label>
                 <select id="ce-parent" name="parentEvent"
@@ -78,15 +85,29 @@ function CreateEvent() {
               </div>
             )}
 
-            {/* Date + Venue */}
+            {/* Start Date + Venue */}
             <div className="col-sm-6">
-              <label htmlFor="ce-date" className="form-label">Date</label>
+              <label htmlFor="ce-date" className="form-label">Start Date</label>
               <input id="ce-date" name="date" type="date"
                 className={`form-control ${isInvalid("date") ? "is-invalid" : ""}`}
                 value={formik.values.date}
+                min={dateMin}
+                max={dateMax}
                 onChange={formik.handleChange} onBlur={formik.handleBlur} />
               {isInvalid("date") && <div className="invalid-feedback">{formik.errors.date}</div>}
             </div>
+
+            {/* End Date — main/standalone only */}
+            {isMultiDay && (
+              <div className="col-sm-6">
+                <label htmlFor="ce-enddate" className="form-label">End Date <span className="text-muted small">(optional)</span></label>
+                <input id="ce-enddate" name="endDate" type="date"
+                  className="form-control"
+                  value={formik.values.endDate}
+                  min={formik.values.date || undefined}
+                  onChange={formik.handleChange} onBlur={formik.handleBlur} />
+              </div>
+            )}
 
             <div className="col-sm-6">
               <label htmlFor="ce-venue" className="form-label">Venue</label>
