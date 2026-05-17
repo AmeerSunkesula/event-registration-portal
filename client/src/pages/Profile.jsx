@@ -2,7 +2,7 @@ import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import { logout } from "../features/auth/authSlice"
 import { useProfileData } from "../hooks/useProfileData"
-import { resolveImageUrl } from "../utils/imageUrl"
+import { getImageUrl } from "../utils/imageUrl"
 
 // Profile sub-components
 import ProfileDetailsForm   from "../components/profile/ProfileDetailsForm"
@@ -26,10 +26,8 @@ function Profile() {
   const navigate = useNavigate()
 
   // Avatar src — Cloudinary URL or placeholder
-  const avatarSrc = resolveImageUrl(
-    user?.profilePicture,
+  const avatarSrc = getImageUrl(user?.profilePicture) ||
     `${PLACEHOLDER}&name=${encodeURIComponent(user?.name ?? "U")}`
-  )
 
   const handleDeleted = () => {
     dispatch(logout())

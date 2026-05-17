@@ -13,7 +13,7 @@ const router = express.Router()
 router.get("/me", protect, getMe)
 
 // protect -> multer -> controller
-router.put("/profile-picture", protect, uploadProfile.single("avatar"), uploadProfilePicture)
+router.put("/profile-picture", protect, uploadProfile.single("profilePicture"), uploadProfilePicture)
 router.delete("/profile-picture", protect, removeProfilePicture)
 
 // Update name / rollNumber / department

@@ -19,52 +19,38 @@ export const getMe = async (req, res) => {
 
 export const uploadProfilePicture = async (req, res) => {
   try {
-    // No file attached
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" })
+      return res.status(400).json({ message: 'No file uploaded' });
     }
-
-    // Cloudinary sets req.file.path to the secure URL
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      { profilePicture: req.file.path },
-      { new: true }
-    ).select("-password")
-
-    res.status(200).json({ user: updatedUser })
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.profilePicture = req.file.path;
+    await user.save();
+    res.status(200).json({ user });
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    res.status(500).json({ message: err.message });
   }
 }
 
 export const removeProfilePicture = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-
-    if (user?.profilePicture) {
-      if (user.profilePicture.includes("cloudinary")) {
-        // Extract public_id (path after /upload/vXXXX/)
-        const publicId = user.profilePicture
-          .replace(/.*\/upload\/v\d+\//, "")
-          .replace(/\.[^.]+$/, "")
-        try {
-          await cloudinary.uploader.destroy(publicId)
-        } catch (_) { /* proceed even if delete fails */ }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.profilePicture) {
+      if (user.profilePicture.includes('cloudinary')) {
+        const urlParts = user.profilePicture.split('/upload/');
+        if (urlParts.length > 1) {
+          let publicId = urlParts[1].split('.')[0];
+          if (publicId.match(/^v\d+\//)) publicId = publicId.replace(/^v\d+\//, '');
+          try { await cloudinary.uploader.destroy(publicId); } catch (err) { console.error('GC Failed', err); }
+        }
       }
-      // Legacy local files: just null the field
+      user.profilePicture = null;
+      await user.save();
     }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      { profilePicture: null },
-      { new: true }
-    ).select("-password")
-
-    res.status(200).json({ user: updatedUser })
-  } catch (err) {
-    res.status(500).json({ message: err.message })
-  }
-}
+    res.status(200).json({ message: 'Profile picture removed', user });
+  } catch (error) { res.status(500).json({ message: 'Server Error', error: error.message }); }
+};
 
 // Update profile fields
 export const updateProfile = async (req, res) => {

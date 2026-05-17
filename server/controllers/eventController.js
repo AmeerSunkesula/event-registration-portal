@@ -301,30 +301,29 @@ export const removeUserFromEvent = async (req, res) => {
 // Remove event poster via Cloudinary
 export const removeEventPoster = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id)
-    if (!event) return res.status(404).json({ message: "Event not found" })
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
 
-    if (String(event.organizer) !== String(req.user.id) && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Not authorized to modify this event" })
+    if (String(event.organizer) !== String(req.user.id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to modify this event' });
     }
 
     if (event.poster) {
-      if (event.poster.includes("cloudinary")) {
-        // Extract public_id (path after /upload/vXXXX/)
-        const publicId = event.poster
-          .replace(/.*\/upload\/v\d+\//, "")
-          .replace(/\.[^.]+$/, "")
-        try {
-          await cloudinary.uploader.destroy(publicId)
-        } catch (_) { /* proceed even if delete fails */ }
+      if (event.poster.includes('cloudinary')) {
+        const urlParts = event.poster.split('/upload/');
+        if (urlParts.length > 1) {
+          let publicId = urlParts[1].split('.')[0];
+          if (publicId.match(/^v\d+\//)) publicId = publicId.replace(/^v\d+\//, '');
+          try { await cloudinary.uploader.destroy(publicId); } catch (err) { console.error('GC Failed', err); }
+        }
       }
-      // Legacy local files: just null the field
+      event.poster = null;
+      await event.save();
     }
 
-    event.poster = null
-    await event.save()
-    res.status(200).json(event)
+    res.status(200).json(event);
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    res.status(500).json({ message: err.message });
   }
-}
+};
+

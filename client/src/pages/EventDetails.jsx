@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useEventDetails } from "../hooks/useEventDetails"
-import { resolveImageUrl } from "../utils/imageUrl"
+import { getImageUrl } from "../utils/imageUrl"
 
 const POSTER_PH = "https://placehold.co/1200x400/303b57/debc58?text=Event"
 
@@ -124,7 +124,7 @@ function EventDetails() {
 
       {/* Banner image */}
       <img
-        src={resolveImageUrl(event.poster, POSTER_PH)}
+        src={getImageUrl(event.poster) || POSTER_PH}
         alt={event.title}
         className="w-100 rounded-3 mb-4"
         style={{ maxHeight: 380, objectFit: "cover" }}

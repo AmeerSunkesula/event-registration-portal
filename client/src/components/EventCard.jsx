@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom"
-import { resolveImageUrl } from "../utils/imageUrl"
+import { getImageUrl } from "../utils/imageUrl"
 
 const POSTER_PH = "https://placehold.co/600x200/303b57/debc58?text=Event"
 
@@ -73,7 +73,7 @@ function EventCard({ ev, user, onRegister, onUnregister }) {
   return (
     <div className="card auth-card h-100">
       <img
-        src={resolveImageUrl(ev.poster, POSTER_PH)}
+        src={getImageUrl(ev.poster) || POSTER_PH}
         alt={ev.title}
         className="card-img-top"
         style={{ height: 140, objectFit: "cover" }}
