@@ -1,5 +1,4 @@
-import fs from "fs"
-import path from "path"
+import cloudinary from "../config/cloudinary.js"
 import User from "../models/User.js"
 import Event from "../models/Event.js"
 import bcrypt from "bcryptjs"
@@ -25,13 +24,10 @@ export const uploadProfilePicture = async (req, res) => {
       return res.status(400).json({ message: "No file uploaded" })
     }
 
-    // Normalize path separators
-    const filePath = req.file.path.replace(/\\/g, "/")
-
-    // Update and return user without password
+    // Cloudinary sets req.file.path to the secure URL
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { profilePicture: filePath },
+      { profilePicture: req.file.path },
       { new: true }
     ).select("-password")
 
@@ -44,12 +40,18 @@ export const uploadProfilePicture = async (req, res) => {
 export const removeProfilePicture = async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-    // GC: delete file from disk
+
     if (user?.profilePicture) {
-      try {
-        const filePath = path.join(process.cwd(), user.profilePicture)
-        fs.unlinkSync(filePath)
-      } catch (_) { /* file already missing */ }
+      if (user.profilePicture.includes("cloudinary")) {
+        // Extract public_id (path after /upload/vXXXX/)
+        const publicId = user.profilePicture
+          .replace(/.*\/upload\/v\d+\//, "")
+          .replace(/\.[^.]+$/, "")
+        try {
+          await cloudinary.uploader.destroy(publicId)
+        } catch (_) { /* proceed even if delete fails */ }
+      }
+      // Legacy local files: just null the field
     }
 
     const updatedUser = await User.findByIdAndUpdate(

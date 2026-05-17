@@ -2,6 +2,7 @@ import { useDispatch } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import { logout } from "../features/auth/authSlice"
 import { useProfileData } from "../hooks/useProfileData"
+import { resolveImageUrl } from "../utils/imageUrl"
 
 // Profile sub-components
 import ProfileDetailsForm   from "../components/profile/ProfileDetailsForm"
@@ -11,7 +12,6 @@ import MyRegisteredEvents   from "../components/profile/MyRegisteredEvents"
 import MyHostedEvents       from "../components/profile/MyHostedEvents"
 import CoordinatorPanel     from "../components/profile/CoordinatorPanel"
 
-const AVATAR_BASE = "http://localhost:5000/"
 const PLACEHOLDER = "https://ui-avatars.com/api/?background=303b57&color=fff&size=128&bold=true"
 
 function Profile() {
@@ -25,10 +25,11 @@ function Profile() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
 
-  // Avatar src — upload or placeholder
-  const avatarSrc = user?.profilePicture
-    ? `${AVATAR_BASE}${user.profilePicture}`
-    : `${PLACEHOLDER}&name=${encodeURIComponent(user?.name ?? "U")}`
+  // Avatar src — Cloudinary URL or placeholder
+  const avatarSrc = resolveImageUrl(
+    user?.profilePicture,
+    `${PLACEHOLDER}&name=${encodeURIComponent(user?.name ?? "U")}`
+  )
 
   const handleDeleted = () => {
     dispatch(logout())

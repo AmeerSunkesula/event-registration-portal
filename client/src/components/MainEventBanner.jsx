@@ -1,12 +1,7 @@
 import EventCard from "./EventCard"
+import { resolveImageUrl } from "../utils/imageUrl"
 
 const POSTER_PH = "https://placehold.co/1200x300/303b57/debc58?text=Main+Event"
-// Handle raw filename OR relative path stored in DB
-const posterSrc = (poster) => poster
-  ? (poster.includes("/")
-      ? `http://localhost:5000/${poster}`
-      : `http://localhost:5000/uploads/events/${poster}`)
-  : POSTER_PH
 
 function MainEventBanner({ main, user, onRegister, onUnregister }) {
   return (
@@ -15,7 +10,7 @@ function MainEventBanner({ main, user, onRegister, onUnregister }) {
 
       {/* Banner poster */}
       <img
-        src={posterSrc(main.poster)}
+        src={resolveImageUrl(main.poster, POSTER_PH)}
         alt={main.title}
         className="card-img-top"
         style={{ height: 220, objectFit: "cover" }}
