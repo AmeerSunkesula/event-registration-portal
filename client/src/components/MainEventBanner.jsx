@@ -1,7 +1,7 @@
 import EventCard from "./EventCard"
 import { getImageUrl } from "../utils/imageUrl"
 
-const POSTER_PH = "https://via.placeholder.com/1200x300/303b57/debc58?text=Main+Event"
+const POSTER_PH = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='300' viewBox='0 0 1200 300'><rect width='100%' height='100%' fill='%23303b57'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-weight='bold' font-size='48' fill='%23debc58'>MAIN FESTIVAL EVENT</text></svg>"
 
 function MainEventBanner({ main, user, onRegister, onUnregister }) {
   return (

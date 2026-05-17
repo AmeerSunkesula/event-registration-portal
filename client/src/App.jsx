@@ -16,6 +16,8 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import Home from "./pages/Home"
 import PortalFooter from "./components/PortalFooter"
 
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000"
+
 function App() {
   const dispatch = useDispatch()
   const token = useSelector((state) => state.auth.token)
@@ -28,7 +30,7 @@ function App() {
       return
     }
     axios
-      .get("http://localhost:5000/api/users/me", {
+      .get(`${API_BASE}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(({ data }) => dispatch(setUser(data)))

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom"
 import { getImageUrl } from "../utils/imageUrl"
 
-const POSTER_PH = "https://via.placeholder.com/600x200/303b57/debc58?text=Event"
+const POSTER_PH = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200'><rect width='100%' height='100%' fill='%23303b57'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-weight='bold' font-size='32' fill='%23debc58'>EVENT</text></svg>"
 
 // Format date helper
 const fmt = (d) => new Date(d).toLocaleDateString("en-IN", {

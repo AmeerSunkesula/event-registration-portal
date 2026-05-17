@@ -190,7 +190,7 @@ function EventDashboard() {
                 {event.coordinators.map(coord => (
                   <li key={coord._id} className="list-group-item d-flex align-items-center gap-3">
                     <img 
-                      src={getImageUrl(coord.profilePicture) || "https://via.placeholder.com/40"} 
+                      src={getImageUrl(coord.profilePicture) || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><rect width='100%' height='100%' fill='%23303b57'/><text x='50%' y='55%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-weight='bold' font-size='16' fill='%23debc58'>E</text></svg>"} 
                       className="rounded-circle" width="40" height="40" alt="avatar" />
                     <div>
                       <h6 className="mb-0 fw-semibold">{coord.name}</h6>
@@ -220,7 +220,7 @@ function EventDashboard() {
 
             <div className="card p-3 bg-light border-0 mb-4 d-flex flex-row align-items-start gap-3">
               <img 
-                src={getImageUrl(event.poster) || "https://via.placeholder.com/600x200/303b57/debc58?text=Event"} 
+                src={getImageUrl(event.poster) || "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='200' viewBox='0 0 600 200'><rect width='100%' height='100%' fill='%23303b57'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='system-ui, sans-serif' font-weight='bold' font-size='32' fill='%23debc58'>EVENT</text></svg>"} 
                 alt="Event Poster" 
                 style={{ width: "150px", height: "auto", objectFit: "cover", borderRadius: "8px" }} 
               />
