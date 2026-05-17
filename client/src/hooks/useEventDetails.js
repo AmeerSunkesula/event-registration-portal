@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react"
 import { useSelector } from "react-redux"
 import axios from "axios"
 
-const API = "http://localhost:5000/api/events"
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const API = `${API_BASE}/api/events`
 
 export function useEventDetails(eventId) {
   const { user, token }       = useSelector((s) => s.auth)

@@ -9,12 +9,20 @@ const fileFilter = (req, file, cb) => {
 
 const profileStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: { folder: 'event-portal/profiles', allowed_formats: ['jpg', 'png', 'jpeg', 'webp'] },
+  params: { 
+    folder: 'event-portal/profiles',
+    transformation: [{ width: 800, crop: 'limit', quality: 'auto', fetch_format: 'auto' }]
+  },
+  allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
 });
 
 const posterStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
-  params: { folder: 'event-portal/posters', allowed_formats: ['jpg', 'png', 'jpeg', 'webp'] },
+  params: { 
+    folder: 'event-portal/posters',
+    transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }]
+  },
+  allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
 });
 
 export const uploadProfile = multer({ storage: profileStorage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });

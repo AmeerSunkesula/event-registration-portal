@@ -5,7 +5,8 @@ import axios from "axios"
 import { updateUser } from "../features/auth/authSlice"
 import { profileValidationSchema } from "../utils/profileValidators"
 
-const API = "http://localhost:5000/api/events"
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const API = `${API_BASE}/api/events`
 
 // ── Reducer ───────────────────────────────────────────────
 const initialState = {
@@ -77,11 +78,11 @@ export function useProfileData() {
 
     dispatch({ type: "AVATAR_START" })
     const formData = new FormData()
-    formData.append("avatar", file)
+    formData.append("profilePicture", file)
 
     try {
       const { data } = await axios.put(
-        "http://localhost:5000/api/users/profile-picture",
+        `${API_BASE}/api/users/profile-picture`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } },
       )
@@ -111,7 +112,7 @@ export function useProfileData() {
     onSubmit: async (values, { setSubmitting }) => {
       try {
         const { data } = await axios.put(
-          "http://localhost:5000/api/users/update",
+          `${API_BASE}/api/users/update`,
           {
             name: values.name,
             rollNumber: values.rollNumber,
@@ -132,12 +133,12 @@ export function useProfileData() {
   const handleCoordinatorReq = async (eventId, action) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/staff/handle-request/${eventId}`,
+        `${API_BASE}/api/staff/handle-request/${eventId}`,
         { action },
         { headers: { Authorization: `Bearer ${token}` } },
       )
       // Re-hydrate user to update the requests list
-      const { data } = await axios.get("http://localhost:5000/api/users/me", {
+      const { data } = await axios.get(`${API_BASE}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       reduxDispatch(updateUser(data))
@@ -150,7 +151,7 @@ export function useProfileData() {
     try {
       dispatch({ type: "AVATAR_START" })
       await axios.delete(
-        "http://localhost:5000/api/users/profile-picture",
+        `${API_BASE}/api/users/profile-picture`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       reduxDispatch(updateUser({ profilePicture: null }))
@@ -162,7 +163,7 @@ export function useProfileData() {
 
   const changePassword = async (oldPassword, newPassword) => {
     await axios.put(
-      "http://localhost:5000/api/users/change-password",
+      `${API_BASE}/api/users/change-password`,
       { oldPassword, newPassword },
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -170,7 +171,7 @@ export function useProfileData() {
 
   const deleteAccount = async (password) => {
     await axios.post(
-      "http://localhost:5000/api/users/delete-account",
+      `${API_BASE}/api/users/delete-account`,
       { password },
       { headers: { Authorization: `Bearer ${token}` } }
     )

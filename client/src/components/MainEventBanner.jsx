@@ -1,7 +1,7 @@
 import EventCard from "./EventCard"
 import { getImageUrl } from "../utils/imageUrl"
 
-const POSTER_PH = "https://placehold.co/1200x300/303b57/debc58?text=Main+Event"
+const POSTER_PH = "https://via.placeholder.com/1200x300/303b57/debc58?text=Main+Event"
 
 function MainEventBanner({ main, user, onRegister, onUnregister }) {
   return (

@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react"
 import { useSelector } from "react-redux"
 import axios from "axios"
 
-const API_EVENTS = "http://localhost:5000/api/events"
-const API_STAFF = "http://localhost:5000/api/staff"
+const API_BASE   = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const API_EVENTS = `${API_BASE}/api/events`
+const API_STAFF  = `${API_BASE}/api/staff`
 
 export function useEventDashboard(eventId) {
   const { user, token } = useSelector((s) => s.auth)

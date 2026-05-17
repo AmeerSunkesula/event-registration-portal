@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useEventDashboard } from "../hooks/useEventDashboard"
+import { getImageUrl } from "../utils/imageUrl"
 
 function EventDashboard() {
   const { id } = useParams()
@@ -189,7 +190,7 @@ function EventDashboard() {
                 {event.coordinators.map(coord => (
                   <li key={coord._id} className="list-group-item d-flex align-items-center gap-3">
                     <img 
-                      src={coord.profilePicture ? `http://localhost:5000/${coord.profilePicture}` : "https://placehold.co/40"} 
+                      src={getImageUrl(coord.profilePicture) || "https://via.placeholder.com/40"} 
                       className="rounded-circle" width="40" height="40" alt="avatar" />
                     <div>
                       <h6 className="mb-0 fw-semibold">{coord.name}</h6>
@@ -219,7 +220,7 @@ function EventDashboard() {
 
             <div className="card p-3 bg-light border-0 mb-4 d-flex flex-row align-items-start gap-3">
               <img 
-                src={event.poster ? (event.poster.includes("/") ? `http://localhost:5000/${event.poster}` : `http://localhost:5000/uploads/events/${event.poster}`) : "https://placehold.co/600x200/303b57/debc58?text=Event"} 
+                src={getImageUrl(event.poster) || "https://via.placeholder.com/600x200/303b57/debc58?text=Event"} 
                 alt="Event Poster" 
                 style={{ width: "150px", height: "auto", objectFit: "cover", borderRadius: "8px" }} 
               />

@@ -5,7 +5,8 @@ import { useFormik } from "formik"
 import { useNavigate } from "react-router-dom"
 import axios from "axios"
 
-const API        = "http://localhost:5000/api/events"
+const API_BASE   = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const API        = `${API_BASE}/api/events`
 const CATEGORIES = ["Technical", "Cultural", "Sports", "Workshop", "Seminar", "Tech Fest", "Other"]
 const EVENT_TYPES = ["standalone", "main", "sub"]
 

@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom"
 import { useEventDetails } from "../hooks/useEventDetails"
 import { getImageUrl } from "../utils/imageUrl"
 
-const POSTER_PH = "https://placehold.co/1200x400/303b57/debc58?text=Event"
+const POSTER_PH = "https://via.placeholder.com/1200x400/303b57/debc58?text=Event"
 
 // Format date helper
 const fmt = (d) => new Date(d).toLocaleDateString("en-IN", {
