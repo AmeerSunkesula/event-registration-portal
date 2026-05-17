@@ -1,6 +1,6 @@
 import express from "express"
 import { protect, adminOnly } from "../middleware/authMiddleware.js"
-import upload from "../middleware/uploadMiddleware.js"
+import { uploadProfile } from "../middleware/uploadMiddleware.js"
 import { 
   getMe, uploadProfilePicture, removeProfilePicture, updateProfile, 
   changePassword, deleteAccount, 
@@ -13,7 +13,7 @@ const router = express.Router()
 router.get("/me", protect, getMe)
 
 // protect -> multer -> controller
-router.put("/profile-picture", protect, upload.single("avatar"), uploadProfilePicture)
+router.put("/profile-picture", protect, uploadProfile.single("profilePicture"), uploadProfilePicture)
 router.delete("/profile-picture", protect, removeProfilePicture)
 
 // Update name / rollNumber / department

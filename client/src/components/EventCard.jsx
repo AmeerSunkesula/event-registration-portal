@@ -1,13 +1,7 @@
 import { Link, useNavigate } from "react-router-dom"
+import { getImageUrl } from "../utils/imageUrl"
 
-const POSTER_PH = "https://placehold.co/600x200/303b57/debc58?text=Event"
-
-// Resolve poster URL
-const posterSrc = (poster) => poster
-  ? (poster.includes("/")
-      ? `http://localhost:5000/${poster}`
-      : `http://localhost:5000/uploads/events/${poster}`)
-  : POSTER_PH
+const POSTER_PH = "https://via.placeholder.com/600x200/303b57/debc58?text=Event"
 
 // Format date helper
 const fmt = (d) => new Date(d).toLocaleDateString("en-IN", {
@@ -79,7 +73,7 @@ function EventCard({ ev, user, onRegister, onUnregister }) {
   return (
     <div className="card auth-card h-100">
       <img
-        src={posterSrc(ev.poster)}
+        src={getImageUrl(ev.poster) || POSTER_PH}
         alt={ev.title}
         className="card-img-top"
         style={{ height: 140, objectFit: "cover" }}

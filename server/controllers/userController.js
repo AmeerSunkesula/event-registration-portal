@@ -1,5 +1,4 @@
-import fs from "fs"
-import path from "path"
+import cloudinary from "../config/cloudinary.js"
 import User from "../models/User.js"
 import Event from "../models/Event.js"
 import bcrypt from "bcryptjs"
@@ -20,49 +19,38 @@ export const getMe = async (req, res) => {
 
 export const uploadProfilePicture = async (req, res) => {
   try {
-    // No file attached
     if (!req.file) {
-      return res.status(400).json({ message: "No file uploaded" })
+      return res.status(400).json({ message: 'No file uploaded' });
     }
-
-    // Normalize path separators
-    const filePath = req.file.path.replace(/\\/g, "/")
-
-    // Update and return user without password
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      { profilePicture: filePath },
-      { new: true }
-    ).select("-password")
-
-    res.status(200).json({ user: updatedUser })
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    user.profilePicture = req.file.path;
+    await user.save();
+    res.status(200).json({ user });
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    res.status(500).json({ message: err.message });
   }
 }
 
 export const removeProfilePicture = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id)
-    // GC: delete file from disk
-    if (user?.profilePicture) {
-      try {
-        const filePath = path.join(process.cwd(), user.profilePicture)
-        fs.unlinkSync(filePath)
-      } catch (_) { /* file already missing */ }
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (user.profilePicture) {
+      if (user.profilePicture.includes('cloudinary')) {
+        const urlParts = user.profilePicture.split('/upload/');
+        if (urlParts.length > 1) {
+          let publicId = urlParts[1].split('.')[0];
+          if (publicId.match(/^v\d+\//)) publicId = publicId.replace(/^v\d+\//, '');
+          try { await cloudinary.uploader.destroy(publicId); } catch (err) { console.error('GC Failed', err); }
+        }
+      }
+      user.profilePicture = null;
+      await user.save();
     }
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      { profilePicture: null },
-      { new: true }
-    ).select("-password")
-
-    res.status(200).json({ user: updatedUser })
-  } catch (err) {
-    res.status(500).json({ message: err.message })
-  }
-}
+    res.status(200).json({ message: 'Profile picture removed', user });
+  } catch (error) { res.status(500).json({ message: 'Server Error', error: error.message }); }
+};
 
 // Update profile fields
 export const updateProfile = async (req, res) => {

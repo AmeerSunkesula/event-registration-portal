@@ -19,12 +19,28 @@ const app = express()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-app.use(cors())
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://127.0.0.1:5173",
+      "https://placehold.co/",
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
+    credentials: true,
+  }),
+)
 app.use(express.json())
 
 // Expose only sub-folders
-app.use("/uploads/events", express.static(path.join(__dirname, "uploads/events")))
-app.use("/uploads/profiles", express.static(path.join(__dirname, "uploads/profiles")))
+app.use(
+  "/uploads/events",
+  express.static(path.join(__dirname, "uploads/events")),
+)
+app.use(
+  "/uploads/profiles",
+  express.static(path.join(__dirname, "uploads/profiles")),
+)
 
 // Mount routes
 app.use("/api/auth", authRoutes)

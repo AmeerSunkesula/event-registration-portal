@@ -1,36 +1,29 @@
-import multer from "multer"
-import path from "path"
-import fs from "fs"
-import { v4 as uuidv4 } from "uuid"
+import multer from 'multer';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import cloudinary from '../config/cloudinary.js';
 
-// Ensure sub-folders exist
-const EVENTS_DIR = "uploads/events"
-const PROFILES_DIR = "uploads/profiles"
-fs.mkdirSync(EVENTS_DIR, { recursive: true })
-fs.mkdirSync(PROFILES_DIR, { recursive: true })
-
-// Route by field name
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dest = file.fieldname === "avatar" ? PROFILES_DIR : EVENTS_DIR
-    cb(null, dest)
-  },
-  filename: (req, file, cb) => {
-    // UUID-prefixed original name
-    cb(null, `${uuidv4()}-${file.originalname}`)
-  },
-})
-
-// Allow images only
 const fileFilter = (req, file, cb) => {
-  const allowed = ["image/jpeg", "image/png", "image/webp"]
-  if (allowed.includes(file.mimetype)) {
-    cb(null, true)
-  } else {
-    cb(new Error("Only JPEG, PNG, and WebP images are allowed"), false)
-  }
-}
+  if (file.mimetype.startsWith('image/')) cb(null, true);
+  else cb(new Error('Not an image!'), false);
+};
 
-const upload = multer({ storage, fileFilter })
+const profileStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: { 
+    folder: 'event-portal/profiles',
+    transformation: [{ width: 800, crop: 'limit', quality: 'auto', fetch_format: 'auto' }]
+  },
+  allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
+});
 
-export default upload
+const posterStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: { 
+    folder: 'event-portal/posters',
+    transformation: [{ width: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }]
+  },
+  allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
+});
+
+export const uploadProfile = multer({ storage: profileStorage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
+export const uploadPoster = multer({ storage: posterStorage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });

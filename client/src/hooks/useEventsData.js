@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from "react"
 import { useSelector } from "react-redux"
 import axios from "axios"
 
-const API        = "http://localhost:5000/api/events"
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000"
+const API        = `${API_BASE}/api/events`
 const CATEGORIES = ["All", "Technical", "Cultural", "Sports", "Workshop", "Seminar", "Tech Fest", "Other"]
 
 export function useEventsData() {

@@ -1,5 +1,4 @@
-import fs from "fs"
-import path from "path"
+import cloudinary from "../config/cloudinary.js"
 import Event from "../models/Event.js"
 import User from "../models/User.js"
 import mongoose from "mongoose"
@@ -53,7 +52,7 @@ export const createEvent = async (req, res) => {
       parentEvent: parentEvent || null,
       organizer:   req.user.id,
       eventCode,
-      poster: req.file ? req.file.path.replace(/\\/g, "/") : null,
+      poster: req.file ? req.file.path : null,
       ...(type !== "sub" && endDate ? { endDate } : {}),
     })
 
@@ -96,7 +95,7 @@ export const updateEvent = async (req, res) => {
     if (event.eventType === "sub") delete updateData.endDate
 
     if (req.file) {
-      updateData.poster = req.file.path.replace(/\\/g, "/")
+      updateData.poster = req.file.path
     }
 
     const updatedEvent = await Event.findByIdAndUpdate(
@@ -299,28 +298,32 @@ export const removeUserFromEvent = async (req, res) => {
   }
 }
 
-// Remove event poster + GC filesystem
+// Remove event poster via Cloudinary
 export const removeEventPoster = async (req, res) => {
   try {
-    const event = await Event.findById(req.params.id)
-    if (!event) return res.status(404).json({ message: "Event not found" })
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Event not found' });
 
-    if (String(event.organizer) !== String(req.user.id) && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Not authorized to modify this event" })
+    if (String(event.organizer) !== String(req.user.id) && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to modify this event' });
     }
 
-    // GC: delete file from disk
     if (event.poster) {
-      try {
-        const filePath = path.join(process.cwd(), event.poster)
-        fs.unlinkSync(filePath)
-      } catch (_) { /* file already gone */ }
+      if (event.poster.includes('cloudinary')) {
+        const urlParts = event.poster.split('/upload/');
+        if (urlParts.length > 1) {
+          let publicId = urlParts[1].split('.')[0];
+          if (publicId.match(/^v\d+\//)) publicId = publicId.replace(/^v\d+\//, '');
+          try { await cloudinary.uploader.destroy(publicId); } catch (err) { console.error('GC Failed', err); }
+        }
+      }
+      event.poster = null;
+      await event.save();
     }
 
-    event.poster = null
-    await event.save()
-    res.status(200).json(event)
+    res.status(200).json(event);
   } catch (err) {
-    res.status(500).json({ message: err.message })
+    res.status(500).json({ message: err.message });
   }
-}
+};
+

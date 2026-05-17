@@ -1,15 +1,9 @@
 import { useState } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { useEventDetails } from "../hooks/useEventDetails"
+import { getImageUrl } from "../utils/imageUrl"
 
-const POSTER_PH = "https://placehold.co/1200x400/303b57/debc58?text=Event"
-
-// Resolve poster URL
-const posterSrc = (poster) => poster
-  ? (poster.includes("/")
-      ? `http://localhost:5000/${poster}`
-      : `http://localhost:5000/uploads/events/${poster}`)
-  : POSTER_PH
+const POSTER_PH = "https://via.placeholder.com/1200x400/303b57/debc58?text=Event"
 
 // Format date helper
 const fmt = (d) => new Date(d).toLocaleDateString("en-IN", {
@@ -130,7 +124,7 @@ function EventDetails() {
 
       {/* Banner image */}
       <img
-        src={posterSrc(event.poster)}
+        src={getImageUrl(event.poster) || POSTER_PH}
         alt={event.title}
         className="w-100 rounded-3 mb-4"
         style={{ maxHeight: 380, objectFit: "cover" }}
