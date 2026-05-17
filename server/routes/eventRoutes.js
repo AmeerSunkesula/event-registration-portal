@@ -1,14 +1,37 @@
 import express from "express"
-import { protect } from "../middleware/authMiddleware.js"
+import { protect, adminOnly } from "../middleware/authMiddleware.js"
 import upload from "../middleware/uploadMiddleware.js"
-import { createEvent, getEvents } from "../controllers/eventController.js"
+import {
+  createEvent,
+  getEvents,
+  getEventById,
+  getMyEvents,
+  getOrganizedEvents,
+  registerForEvent,
+  unregisterFromEvent,
+  getEventDashboardData,
+  updateEvent,
+  deleteEvent,
+  removeUserFromEvent,
+  removeEventPoster
+} from "../controllers/eventController.js"
 
 const router = express.Router()
 
-// Any authenticated student can create
-router.post("/create", protect, upload.single("poster"), createEvent)
+// All static named routes — must come before /:id
+router.get("/my-events",        protect, getMyEvents)
+router.get("/organized-by-me",  protect, getOrganizedEvents)
+router.get("/",                 getEvents)
+router.post("/create",          protect, upload.single("poster"), createEvent)
+router.post("/register/:id",    protect, registerForEvent)
+router.post("/unregister/:id",  protect, unregisterFromEvent)
+router.get("/:id/dashboard-data", protect, getEventDashboardData)
 
-// Protected route — all users
-router.get("/", protect, getEvents)
+// Dynamic param — last to avoid collisions
+router.put("/:id",              protect, upload.single("poster"), updateEvent)
+router.get("/:id",              getEventById)
+router.delete("/:id",           protect, deleteEvent)
+router.delete("/:id/users/:userId", protect, adminOnly, removeUserFromEvent)
+router.delete("/:id/poster",    protect, removeEventPoster)
 
 export default router

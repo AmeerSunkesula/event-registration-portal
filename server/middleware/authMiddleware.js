@@ -5,9 +5,8 @@ import User from "../models/User.js"
 export const protect = async (req, res, next) => {
   const authHeader = req.headers.authorization
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader || !authHeader.startsWith("Bearer "))
     return res.status(401).json({ message: "No token provided" })
-  }
 
   const token = authHeader.split(" ")[1]
 
@@ -16,9 +15,27 @@ export const protect = async (req, res, next) => {
     req.user = await User.findById(decoded.id).select("-password")
     next()
   } catch (err) {
-    // Distinguish expired vs tampered
+    // Expired vs tampered
     const message =
       err.name === "TokenExpiredError" ? "Token has expired" : "Invalid token"
     return res.status(401).json({ message })
+  }
+}
+
+// Admin only guard
+export const adminOnly = (req, res, next) => {
+  if (req.user && req.user.role === "admin") {
+    next()
+  } else {
+    res.status(403).json({ message: "Not authorized as an admin" })
+  }
+}
+
+// Staff only guard
+export const staffOnly = (req, res, next) => {
+  if (req.user && req.user.role === "staff") {
+    next()
+  } else {
+    res.status(403).json({ message: "Not authorized as staff" })
   }
 }

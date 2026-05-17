@@ -10,6 +10,8 @@ import connectDB from "./config/db.js"
 import authRoutes from "./routes/authRoutes.js"
 import eventRoutes from "./routes/eventRoutes.js"
 import userRoutes from "./routes/userRoutes.js"
+import staffRoutes from "./routes/staffRoutes.js"
+import seedAdmin from "./utils/seedAdmin.js"
 
 const app = express()
 
@@ -28,6 +30,7 @@ app.use("/uploads/profiles", express.static(path.join(__dirname, "uploads/profil
 app.use("/api/auth", authRoutes)
 app.use("/api/events", eventRoutes)
 app.use("/api/users", userRoutes)
+app.use("/api/staff", staffRoutes)
 
 app.get("/", (req, res) => {
   res.send("Event Portal API is officially running! 🚀")
@@ -36,6 +39,7 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000
 
 // Connect DB, then start server
-connectDB().then(() => {
+connectDB().then(async () => {
+  await seedAdmin()
   app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`))
 })

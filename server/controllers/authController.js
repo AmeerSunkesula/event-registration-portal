@@ -2,44 +2,52 @@ import User from "../models/User.js"
 import bcrypt from "bcryptjs"
 import generateToken from "../services/tokenService.js"
 
-// Register a new user
+// Register new user
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role, rollNumber, department } = req.body
+    const { name, email, password, role, rollNumber, department, acknowledgementAccepted } = req.body
 
-    // 1. Check for existing user
     const existingUser = await User.findOne({ email })
-    if (existingUser) {
+    if (existingUser)
       return res.status(400).json({ message: "User already exists" })
+
+    if (role === "staff" && !acknowledgementAccepted) {
+      return res.status(400).json({ message: "Staff must accept acknowledgement" })
     }
 
-    // 2. Hash password
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    // 3. Create user
     const newUser = new User({
       name,
       email,
       password: hashedPassword,
       role,
+      isApproved: role !== "staff",
       rollNumber: role === "student" ? rollNumber : undefined,
-      department: role === "student" ? department : undefined,
+      department: (role === "student" || role === "staff") ? department : undefined,
+      acknowledgementAccepted: role === "staff" ? true : undefined,
     })
 
     await newUser.save()
 
-    // 4. Generate token & respond
-    const token = generateToken(newUser)
+    // Generate & return token if approved
+    let token = null
+    if (newUser.isApproved) {
+      token = generateToken(newUser)
+    }
 
     res.status(201).json({
-      message: "User registered successfully",
+      message: newUser.isApproved ? "User registered successfully" : "Registration successful. Pending admin approval.",
       token,
       user: {
         id: newUser._id,
         name: newUser.name,
         email: newUser.email,
         role: newUser.role,
+        rollNumber: newUser.rollNumber,
+        department: newUser.department,
+        isApproved: newUser.isApproved,
       },
     })
   } catch (error) {
@@ -52,19 +60,19 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body
 
-    // 1. Find user
     const user = await User.findOne({ email })
-    if (!user) {
+    if (!user)
       return res.status(400).json({ message: "Invalid credentials" })
-    }
 
-    // 2. Validate password
     const isMatch = await bcrypt.compare(password, user.password)
-    if (!isMatch) {
+    if (!isMatch)
       return res.status(400).json({ message: "Invalid credentials" })
+
+    if (user.role === "staff" && !user.isApproved) {
+      return res.status(403).json({ message: "You don't have access or your access is removed. Wait until admin's approval." })
     }
 
-    // 3. Generate token & respond
+    // Generate & return token
     const token = generateToken(user)
 
     res.status(200).json({
@@ -78,6 +86,24 @@ export const login = async (req, res) => {
         department: user.department,
       },
     })
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message })
+  }
+}
+
+// Request password reset
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body
+    if (!email) return res.status(400).json({ message: "Email is required" })
+    
+    const user = await User.findOne({ email })
+    if (!user) return res.status(404).json({ message: "User not found" })
+    
+    user.passwordResetRequested = true
+    await user.save()
+    
+    res.status(200).json({ message: "Password reset requested successfully" })
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message })
   }
